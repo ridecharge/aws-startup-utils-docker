@@ -41,16 +41,16 @@ def build_logger(name, instance_id):
 def main(hosted_zone, record):
     instance_metadata = boto.utils.get_instance_metadata()
     region = boto.utils.get_instance_identity()['document']['region']
-    az = instance_metadata['placement']['availability-zone']
     conn = boto.route53.connect_to_region(region)
     record_sets = boto.route53.record.ResourceRecordSets(conn, hosted_zone)
 
     logger = build_logger(DnsRegistration.__name__, instance_metadata['instance-id'])
     try:
-        DnsRegistration(record_sets,
-                        record,
-                        instance_metadata['local-ipv4'],
-                        logger
+        DnsRegistration(
+            record_sets,
+            record,
+            instance_metadata['local-ipv4'],
+            logger
         ).register()
     except:
         logger.exception('Error Registering DNS')

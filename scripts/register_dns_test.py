@@ -6,7 +6,7 @@ import boto
 import register_dns
 
 
-class register_dnsRegistrationTest(unittest.TestCase):
+class DnsRegistrationTest(unittest.TestCase):
     def setUp(self):
         self.conn = MagicMock()
         self.hosted_zone = 'ASAFSDF1231231'
@@ -18,9 +18,9 @@ class register_dnsRegistrationTest(unittest.TestCase):
         self.logger = register_dns.build_logger(self.logger_name, self.instance_id)
         self.logger.setLevel(logging.ERROR)
         self.registration = register_dns.DnsRegistration(self.record_sets,
-                                                self.record,
-                                                self.ip,
-                                                self.logger)
+                                                         self.record,
+                                                         self.ip,
+                                                         self.logger)
 
     def test_build_logger(self):
         self.assertEqual(self.logger.name, self.logger_name)
