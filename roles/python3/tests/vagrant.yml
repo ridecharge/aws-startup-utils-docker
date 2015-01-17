@@ -1,6 +1,0 @@
----
-- hosts: all
-  roles:
-    - python3
-  vars:
-    ansible_python_interpreter: "/usr/bin/env python"
