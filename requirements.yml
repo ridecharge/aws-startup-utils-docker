@@ -1,0 +1,5 @@
+# role dependencies
+---
+- src: git+git@github.com:ridecharge/python3-ansible-role.git
+  path: roles
+  name: python3

@@ -1,0 +1,3 @@
+---
+# defaults file for route53-ansible-role
+python3_pip_packages: []
