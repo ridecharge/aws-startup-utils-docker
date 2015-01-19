@@ -16,11 +16,12 @@ COPY playbook.yml /tmp/playbook.yml
 COPY roles /tmp/roles/
 
 # Provision the image
-RUN /tmp/ansible-playbook --connection=local playbook.yml
+RUN ansible-playbook --connection=local /tmp/playbook.yml
 
 # Remove ansible
 RUN apt-get purge -y --auto-remove ansible software-properties-common
 
-# Install our aws-util-scripts
-COPY scripts /root/aws-util-scripts/
-RUN chmod -R 0500 /root/aws-util-scripts/
+# Install our aws-startup-utils
+COPY scripts /usr/local/aws-startup-utils/bin
+RUN chmod -R 0500 /usr/local/aws-startup-utils/bin
+WORKDIR /usr/local/aws-startup-utils/bin

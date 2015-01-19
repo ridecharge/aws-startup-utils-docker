@@ -16,12 +16,12 @@ class NetworkInterfaceAttachment(object):
         self.instance_id = instance_id
         self.device_index = device_index
         self.logger.info(
-            "Initializing NetworkInterfaceAttachment {0.role} in subnet {0.subnet} to instance {0.instance_id} on index {0.device_index}".format(
+            "Initializing NetworkInterfaceAttachment {0.role} in subnet {0.subnet_id} to instance {0.instance_id} on index {0.device_index}".format(
                 self))
 
     def find_network_interface(self):
         return self.conn.get_all_network_interfaces(
-            filters={'role': self.role, 'subnet-id': self.subnet_id}
+            filters={'tag:Role': self.role, 'subnet-id': self.subnet_id}
         )[0]
 
     def attach(self):
