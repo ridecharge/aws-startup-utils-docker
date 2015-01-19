@@ -16,7 +16,7 @@ class DnsRegistrationTest(unittest.TestCase):
         self.role = 'dns'
         self.az = 'us-east-1a'
         self.hosted_zone_name = 'test.gc'
-        self.record = self.role + "-" + self.az + "." + self.hosted_zone_name
+        self.record = "-".join([self.role, self.az, self.hosted_zone_name])
         self.record_sets = boto.route53.record.ResourceRecordSets(self.conn, self.hosted_zone)
         self.logger = register_dns.build_logger(self.logger_name, self.instance_id, self. role)
         self.logger.setLevel(logging.ERROR)

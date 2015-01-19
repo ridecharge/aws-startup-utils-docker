@@ -10,7 +10,7 @@ class DnsRegistration(object):
     def __init__(self, record_sets, role, az, hosted_zone_name, ip, logger):
         self.record_sets = record_sets
         self.role = role
-        self.record = role + "-" + az + "." + hosted_zone_name
+        self.record = "-".join([role, az, hosted_zone_name])
         self.logger = logger
         self.ip = ip
         self.logger.info(
@@ -58,4 +58,4 @@ def main(hosted_zone_id, hosted_zone_name, role):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2].lower(), sys.argv[3].lower())
