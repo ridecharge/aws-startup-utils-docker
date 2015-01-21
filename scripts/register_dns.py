@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import boto.utils
+import boto.ec2
 import boto.route53
 import logging
 import loggly.handlers
@@ -10,7 +11,7 @@ class DnsRegistration(object):
     def __init__(self, record_sets, role, az, hosted_zone_name, ip, logger):
         self.record_sets = record_sets
         self.role = role
-        self.record = "-".join([role, az, hosted_zone_name])
+        self.record = "-".join([role, az, hosted_zone_name]).lower()
         self.logger = logger
         self.ip = ip
         self.logger.info(
@@ -35,18 +36,32 @@ def build_logger(name, instance_id, role):
     url = ",".join([LOGGLY_URL, instance_id, role])
     handler = loggly.handlers.HTTPSHandler(url)
     logger.addHandler(handler)
+    logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.INFO)
     return logger
 
 
-def main(hosted_zone_id, hosted_zone_name, role):
+def create_aws_connections(region):
+    route53_conn = boto.route53.connect_to_region(region)
+    ec2_conn = boto.ec2.connect_to_region(region)
+    return ec2_conn, route53_conn
+
+
+def get_role(ec2_conn, instance_id):
+    return ec2_conn.get_only_instances(instance_id)[0].tags['Role'].lower()
+
+
+def main(hosted_zone_id, hosted_zone_name):
     instance_metadata = boto.utils.get_instance_metadata()
     az = instance_metadata['placement']['availability-zone']
     region = boto.utils.get_instance_identity()['document']['region']
-    conn = boto.route53.connect_to_region(region)
-    record_sets = boto.route53.record.ResourceRecordSets(conn, hosted_zone_id)
+    instance_id = instance_metadata['instance-id']
 
-    logger = build_logger(DnsRegistration.__name__, instance_metadata['instance-id'], role)
+    ec2_conn, route53_conn = create_aws_connections(region)
+
+    role = get_role(ec2_conn, instance_id)
+    record_sets = boto.route53.record.ResourceRecordSets(route53_conn, hosted_zone_id)
+    logger = build_logger(DnsRegistration.__name__, instance_id, role)
     try:
         DnsRegistration(
             record_sets, role, az, hosted_zone_name,
@@ -58,4 +73,4 @@ def main(hosted_zone_id, hosted_zone_name, role):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2].lower(), sys.argv[3].lower())
+    main(sys.argv[1], sys.argv[2])

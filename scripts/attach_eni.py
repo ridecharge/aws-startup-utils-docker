@@ -35,21 +35,27 @@ LOGGLY_URL = "https://logs-01.loggly.com/inputs/" + \
              "e8bcd155-264b-4ec0-88be-fcb023f76a89/tag/python,boot,networkinterface,cloudformation"
 
 
+def get_role(ec2_conn, instance_id):
+    return ec2_conn.get_only_instances(instance_id)[0].tags['Role'].lower()
+
+
 def build_logger(name, instance_id, role):
     """ Sets up a logger to send files to Loggly with dynamic tags """
     logger = logging.getLogger(name)
     url = ",".join([LOGGLY_URL, instance_id, role])
     handler = loggly.handlers.HTTPSHandler(url)
     logger.addHandler(handler)
+    logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.INFO)
     return logger
 
 
-def main(role):
+def main():
     instance_metadata = boto.utils.get_instance_metadata()
     instance_id = instance_metadata['instance-id']
     subnet_id = list(instance_metadata['network']['interfaces']['macs'].values())[0]['subnet-id']
     conn = boto.ec2.connect_to_region(boto.utils.get_instance_identity()['document']['region'])
+    role = get_role(conn, instance_id)
 
     logger = build_logger(NetworkInterfaceAttachment.__name__, instance_id, role)
     try:
@@ -59,4 +65,4 @@ def main(role):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    main()
