@@ -4,10 +4,11 @@ from unittest.mock import MagicMock
 import logging
 import boto
 import register_dns
-import os
+import common
 
-os.environ["LOGGLY_TOKEN"] = "abc"
+
 class DnsRegistrationTest(unittest.TestCase):
+
     def setUp(self):
         self.conn = MagicMock()
         self.hosted_zone = 'ASAFSDF1231231'
@@ -18,8 +19,10 @@ class DnsRegistrationTest(unittest.TestCase):
         self.az = 'us-east-1a'
         self.hosted_zone_name = 'test.gc'
         self.record = "-".join([self.role, self.az, self.hosted_zone_name])
-        self.record_sets = boto.route53.record.ResourceRecordSets(self.conn, self.hosted_zone)
-        self.logger = register_dns.build_logger(self.logger_name, self.instance_id, self. role)
+        self.record_sets = boto.route53.record.ResourceRecordSets(
+            self.conn, self.hosted_zone)
+        self.logger = common.build_logger(
+            self.logger_name, 'abc123', [self.instance_id, self.role])
         self.logger.setLevel(logging.ERROR)
         self.registration = register_dns.DnsRegistration(self.record_sets,
                                                          self.role,
@@ -27,10 +30,6 @@ class DnsRegistrationTest(unittest.TestCase):
                                                          self.hosted_zone_name,
                                                          self.ip,
                                                          self.logger)
-
-    def test_build_logger(self):
-        self.assertEqual(self.logger.name, self.logger_name)
-        self.assertIn(self.instance_id, self.logger.handlers[0].url)
 
     def test_dns_registration_init(self):
         self.assertEqual(self.record_sets, self.registration.record_sets)
@@ -44,7 +43,8 @@ class DnsRegistrationTest(unittest.TestCase):
         record_sets.add_change = MagicMock(return_value=change)
         self.registration.record_sets = record_sets
         self.registration.register()
-        record_sets.add_change.assert_called_with('UPSERT', self.registration.record, 'A')
+        record_sets.add_change.assert_called_with(
+            'UPSERT', self.registration.record, 'A')
         change.add_value.assert_called_with(self.ip)
         record_sets.commit.assert_called()
 

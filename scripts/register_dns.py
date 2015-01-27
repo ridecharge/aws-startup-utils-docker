@@ -2,13 +2,12 @@
 import boto.utils
 import boto.ec2
 import boto.route53
-import logging
-import loggly.handlers
 import sys
-import os
+import common
 
 
 class DnsRegistration(object):
+
     def __init__(self, record_sets, role, az, hosted_zone_name, ip, logger):
         self.record_sets = record_sets
         self.role = role
@@ -27,29 +26,10 @@ class DnsRegistration(object):
         self.logger.info("Successful set {0.ip} to {0.record}.".format(self))
 
 
-LOGGLY_URL = "https://logs-01.loggly.com/inputs/" + \
-             "{}/tag/python,boot,dns,cloudformation"
-
-
-def build_logger(name, instance_id, role):
-    """ Sets up a logger to send files to Loggly with dynamic tags """
-    logger = logging.getLogger(name)
-    url = ",".join([LOGGLY_URL, instance_id, role]).format(os.environ['LOGGLY_TOKEN'])
-    handler = loggly.handlers.HTTPSHandler(url)
-    logger.addHandler(handler)
-    logger.addHandler(logging.StreamHandler())
-    logger.setLevel(logging.INFO)
-    return logger
-
-
 def create_aws_connections(region):
     route53_conn = boto.route53.connect_to_region(region)
     ec2_conn = boto.ec2.connect_to_region(region)
     return ec2_conn, route53_conn
-
-
-def get_role(ec2_conn, instance_id):
-    return ec2_conn.get_only_instances(instance_id)[0].tags['Role'].lower()
 
 
 def main(hosted_zone_id, hosted_zone_name):
@@ -60,9 +40,11 @@ def main(hosted_zone_id, hosted_zone_name):
 
     ec2_conn, route53_conn = create_aws_connections(region)
 
-    role = get_role(ec2_conn, instance_id)
-    record_sets = boto.route53.record.ResourceRecordSets(route53_conn, hosted_zone_id)
-    logger = build_logger(DnsRegistration.__name__, instance_id, role)
+    role = common.get_role(ec2_conn, instance_id)
+    record_sets = boto.route53.record.ResourceRecordSets(
+        route53_conn, hosted_zone_id)
+    logger = common.build_logger(
+        DnsRegistration.__name__, os.environ['LOGGLY_TOKEN'], [instance_id, role])
     try:
         DnsRegistration(
             record_sets, role, az, hosted_zone_name,
