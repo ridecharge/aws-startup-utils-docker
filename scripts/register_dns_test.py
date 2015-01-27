@@ -4,8 +4,9 @@ from unittest.mock import MagicMock
 import logging
 import boto
 import register_dns
+import os
 
-
+os.environ["LOGGLY_TOKEN"] = "abc"
 class DnsRegistrationTest(unittest.TestCase):
     def setUp(self):
         self.conn = MagicMock()

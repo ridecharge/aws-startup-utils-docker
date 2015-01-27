@@ -5,6 +5,7 @@ import boto.route53
 import logging
 import loggly.handlers
 import sys
+import os
 
 
 class DnsRegistration(object):
@@ -27,13 +28,13 @@ class DnsRegistration(object):
 
 
 LOGGLY_URL = "https://logs-01.loggly.com/inputs/" + \
-             "e8bcd155-264b-4ec0-88be-fcb023f76a89/tag/python,boot,dns,cloudformation"
+             "{}/tag/python,boot,dns,cloudformation"
 
 
 def build_logger(name, instance_id, role):
     """ Sets up a logger to send files to Loggly with dynamic tags """
     logger = logging.getLogger(name)
-    url = ",".join([LOGGLY_URL, instance_id, role])
+    url = ",".join([LOGGLY_URL, instance_id, role]).format(os.environ['LOGGLY_TOKEN'])
     handler = loggly.handlers.HTTPSHandler(url)
     logger.addHandler(handler)
     logger.addHandler(logging.StreamHandler())

@@ -5,6 +5,7 @@ import boto.utils
 import logging
 import loggly.handlers
 import sys
+import os
 
 
 class NetworkInterfaceAttachment(object):
@@ -32,7 +33,7 @@ class NetworkInterfaceAttachment(object):
 
 
 LOGGLY_URL = "https://logs-01.loggly.com/inputs/" + \
-             "e8bcd155-264b-4ec0-88be-fcb023f76a89/tag/python,boot,networkinterface,cloudformation"
+             "{}/tag/python,boot,networkinterface,cloudformation"
 
 
 def get_role(ec2_conn, instance_id):
@@ -42,7 +43,7 @@ def get_role(ec2_conn, instance_id):
 def build_logger(name, instance_id, role):
     """ Sets up a logger to send files to Loggly with dynamic tags """
     logger = logging.getLogger(name)
-    url = ",".join([LOGGLY_URL, instance_id, role])
+    url = ",".join([LOGGLY_URL, instance_id, role]).format(os.environ['LOGGLY_TOKEN'])
     handler = loggly.handlers.HTTPSHandler(url)
     logger.addHandler(handler)
     logger.addHandler(logging.StreamHandler())

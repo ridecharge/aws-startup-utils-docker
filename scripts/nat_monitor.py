@@ -7,6 +7,7 @@ import boto.utils
 import logging
 import loggly.handlers
 import time
+import os
 
 
 class NatMonitor(object):
@@ -135,13 +136,13 @@ class NatInstance(object):
 
 
 LOGGLY_URL = "https://logs-01.loggly.com/inputs/" + \
-    "e8bcd155-264b-4ec0-88be-fcb023f76a89/tag/python,boot,cloudformation"
+    "{}/tag/python,boot,cloudformation"
 
 
 def build_logger(name, instance_id):
     """ Sets up a logger to send files to Loggly with dynamic tags """
     logger = logging.getLogger(name)
-    url = ",".join([LOGGLY_URL, instance_id])
+    url = ",".join([LOGGLY_URL, instance_id]).format(os.environ['LOGGLY_TOKEN'])
     handler = loggly.handlers.HTTPSHandler(url)
     logger.addHandler(handler)
     logger.addHandler(logging.StreamHandler())

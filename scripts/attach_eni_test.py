@@ -3,8 +3,9 @@ import unittest
 from unittest.mock import MagicMock
 import logging
 import attach_eni
+import os
 
-
+os.environ["LOGGLY_TOKEN"] = "abc"
 class NetworkInterfaceAttachmentTest(unittest.TestCase):
     def setUp(self):
         self.logger_name = NetworkInterfaceAttachmentTest.__name__
