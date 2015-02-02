@@ -3,6 +3,7 @@ import boto.utils
 import boto.ec2
 import boto.route53
 import sys
+import os
 import common
 
 

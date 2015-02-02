@@ -5,6 +5,7 @@ import boto.ec2
 import boto.ec2.elb
 import boto.utils
 import common
+import os
 import time
 
 
