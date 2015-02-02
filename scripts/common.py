@@ -1,6 +1,5 @@
 import logging
 import loggly.handlers
-import os
 
 LOGGLY_URL = "https://logs-01.loggly.com/inputs/" + \
              "{}/tag/python,boot,cloudformation,{}"
