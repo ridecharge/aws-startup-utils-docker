@@ -15,10 +15,21 @@ def build_logger(name, loggly_token, tags):
     logger.setLevel(logging.INFO)
     return logger
 
+class InstanceTags(object):
+    def __init__(self, ec2_conn, instance_id):
+        self.tags = ec2_conn.get_only_instances(instance_id)[0].tags
 
-def get_role(ec2_conn, instance_id):
-    return ec2_conn.get_only_instances(instance_id)[0].tags['Role'].lower()
+    def get(self, tag_name):
+        return self.tags[tag_name]
 
+    def get_role(self):
+        return self.get('Role').lower()
 
-def get_name_tag(ec2_conn, instance_id):
-    return ec2_conn.get_only_instances(instance_id)[0].tags['Name']
+    def get_name(self):
+        return self.get('Name')
+
+    def get_public_internal_hosted_zone(self):
+        return self.get('PublicInternalHostedZone')
+
+    def get_public_internal_domain(self):
+        return self.get('PublicInternalDomain')

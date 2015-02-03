@@ -33,7 +33,7 @@ def create_aws_connections(region):
     return ec2_conn, route53_conn
 
 
-def main(hosted_zone_id, hosted_zone_name):
+def main():
     instance_metadata = boto.utils.get_instance_metadata()
     az = instance_metadata['placement']['availability-zone']
     region = boto.utils.get_instance_identity()['document']['region']
@@ -41,11 +41,17 @@ def main(hosted_zone_id, hosted_zone_name):
 
     ec2_conn, route53_conn = create_aws_connections(region)
 
-    role = common.get_role(ec2_conn, instance_id)
+    instance_tags = common.InstanceTags(ec2_conn, instance_id)
+    role = instance_tags.get_role()
+    hosted_zone_id = instance_tags.get_public_internal_hosted_zone()
+    hosted_zone_name = instance_tags.get_public_internal_domain()
+
     record_sets = boto.route53.record.ResourceRecordSets(
         route53_conn, hosted_zone_id)
+
     logger = common.build_logger(
         DnsRegistration.__name__, os.environ['LOGGLY_TOKEN'], [instance_id, role])
+    
     try:
         DnsRegistration(
             record_sets, role, az, hosted_zone_name,
@@ -57,4 +63,4 @@ def main(hosted_zone_id, hosted_zone_name):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2])
+    main()

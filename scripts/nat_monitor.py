@@ -89,7 +89,7 @@ class NatInstance(object):
         self.instance_id = instance_metadata['instance-id']
         self.my_route_table_id = self.__find_my_route_table_id()
         self.take_over_route_table_id = self.__find_takeover_route_table_id()
-        self.name_tag = common.get_name_tag(ec2_conn, self.instance_id)
+        self.name_tag = common.InstanceTags(ec2_conn, self.instance_id).get_name()
 
         self.logger = logger
         self.logger.info(
@@ -174,7 +174,7 @@ def main():
     instance_metadata = boto.utils.get_instance_metadata()
 
     vpc_conn, ec2_conn, elb_conn = create_aws_connections(region)
- 
+    
     logger = common.build_logger(
         NatMonitor.__name__, os.environ['LOGGLY_TOKEN'], [instance_metadata['instance-id'], 'nat'])
     try:

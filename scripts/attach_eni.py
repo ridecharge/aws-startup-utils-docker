@@ -36,12 +36,15 @@ def main():
     instance_id = instance_metadata['instance-id']
     subnet_id = list(instance_metadata['network']['interfaces']['macs'].values())[
         0]['subnet-id']
+
     conn = boto.ec2.connect_to_region(
         boto.utils.get_instance_identity()['document']['region'])
-
-    role = common.get_role(conn, instance_id)
+    
+    role = common.InstanceTags(ec2_conn, instance_id).get_role()
+    
     logger = common.build_logger(
         NetworkInterfaceAttachment.__name__, os.environ['LOGGLY_TOKEN'], [instance_id, role])
+    
     try:
         NetworkInterfaceAttachment(
             conn, logger, role, subnet_id, instance_id).attach()

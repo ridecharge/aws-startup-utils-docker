@@ -16,9 +16,12 @@ class CommonTest(unittest.TestCase):
         self.tags = [self.instance_id, self.role]
         self.conn = MagicMock()
         self.instance = MagicMock()
-        self.instance.tags = {'Role': self.role, 'Name': self.logger_name}
+        self.instance.tags = {'Role': self.role, 'Name': self.logger_name,
+                              'PublicInternalHostedZone': 'PublicInternalHostedZone',
+                              'PublicInternalDomain': 'PublicInternalDomain'}
         self.instances = [self.instance]
         self.conn.get_only_instances = MagicMock(return_value=self.instances)
+        self.instance_tags = common.InstanceTags(self.conn, self.instance_id)
 
     def test_build_logger(self):
         logger = common.build_logger(
@@ -29,15 +32,24 @@ class CommonTest(unittest.TestCase):
             self.assertIn(tag, logger.handlers[0].url)
 
     def test_get_role(self):
-        role = common.get_role(self.conn, self.instance_id)
+        role = self.instance_tags.get_role()
         self.conn.get_only_instances.assert_called_with(self.instance_id)
         self.assertEqual(role, self.role)
 
-    def test_name_tag(self):
-        name = common.get_name_tag(self.conn, self.instance_id)
+    def test_get_name(self):
+        name = self.instance_tags.get_name()
         self.conn.get_only_instances.assert_called_with(self.instance_id)
         self.assertEqual(name, self.logger_name)
 
+    def test_public_internal_hosted_zone(self):
+        name = self.instance_tags.get_public_internal_hosted_zone()
+        self.conn.get_only_instances.assert_called_with(self.instance_id)
+        self.assertEqual(name, 'PublicInternalHostedZone')
+
+    def test_public_internal_domain(self):
+        name = self.instance_tags.get_public_internal_domain()
+        self.conn.get_only_instances.assert_called_with(self.instance_id)
+        self.assertEqual(name, 'PublicInternalDomain')
 
 if __name__ == '__main__':
     unittest.main()
