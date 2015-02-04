@@ -40,7 +40,7 @@ def main():
     conn = boto.ec2.connect_to_region(
         boto.utils.get_instance_identity()['document']['region'])
     
-    role = common.InstanceTags(ec2_conn, instance_id).get_role()
+    role = common.InstanceTags(conn, instance_id).get_role()
     
     logger = common.build_logger(
         NetworkInterfaceAttachment.__name__, os.environ['LOGGLY_TOKEN'], [instance_id, role])
