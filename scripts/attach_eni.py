@@ -2,25 +2,26 @@
 import boto
 import boto.ec2
 import boto.utils
-import common
-import os
+import utils
 
 
 class NetworkInterfaceAttachment(object):
-
-    def __init__(self, conn, logger, role, subnet_id, instance_id, device_index=1):
-        self.conn = conn
+    # def __init__(self, conn, logger, role, subnet_id, instance_id, device_index=1):
+    def __init__(self, ec2_conn, instance_tags, instance_metadata, logger, device_index=1):
+        self.ec2_conn = ec2_conn
+        self.role = instance_tags.get_role()
+        self.subnet_id = list(instance_metadata['network']['interfaces']['macs'].values())[
+            0]['subnet-id']
+        self.instance_id = instance_metadata['instance-id']
         self.logger = logger
-        self.role = role
-        self.subnet_id = subnet_id
-        self.instance_id = instance_id
         self.device_index = device_index
         self.logger.info(
-            "Initializing NetworkInterfaceAttachment {0.role} in subnet {0.subnet_id} to instance {0.instance_id} on index {0.device_index}".format(
-                self))
+            "Initializing NetworkInterfaceAttachment" +
+            "{0.role} in subnet {0.subnet_id} to instance {0.instance_id} on index {0.device_index}"
+            .format(self))
 
     def __find_network_interface(self):
-        return self.conn.get_all_network_interfaces(
+        return self.ec2_conn.get_all_network_interfaces(
             filters={'tag:Role': self.role, 'subnet-id': self.subnet_id}
         )[0]
 
@@ -33,21 +34,18 @@ class NetworkInterfaceAttachment(object):
 
 def main():
     instance_metadata = boto.utils.get_instance_metadata()
-    instance_id = instance_metadata['instance-id']
-    subnet_id = list(instance_metadata['network']['interfaces']['macs'].values())[
-        0]['subnet-id']
-
-    conn = boto.ec2.connect_to_region(
+    ec2_conn = boto.ec2.connect_to_region(
         boto.utils.get_instance_identity()['document']['region'])
-    
-    role = common.InstanceTags(conn, instance_id).get_role()
-    
-    logger = common.build_logger(
-        NetworkInterfaceAttachment.__name__, os.environ['LOGGLY_TOKEN'], [instance_id, role])
-    
+    instance_tags = utils.InstanceTags(ec2_conn, instance_metadata['instance-id'])
+
+    logger = utils.get_logger(
+        NetworkInterfaceAttachment.__name__,
+        [instance_metadata['instance-id'], instance_tags.get_role()]
+    )
+
     try:
         NetworkInterfaceAttachment(
-            conn, logger, role, subnet_id, instance_id).attach()
+            ec2_conn, instance_tags, instance_metadata, logger).attach()
     except:
         logger.exception("Failed to attach network interface.")
 

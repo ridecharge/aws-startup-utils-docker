@@ -2,9 +2,8 @@
 import unittest
 from unittest.mock import MagicMock
 import logging
-import boto
 import nat_monitor
-import common
+import utils
 
 
 class NatInstanceTest(unittest.TestCase):
@@ -23,13 +22,16 @@ class NatInstanceTest(unittest.TestCase):
         self.vpc_conn.create_route = MagicMock()
         self.vpc_id = 'vpc123'
         self.az = 'us-east-1a'
-        self.logger = common.build_logger(
+        self.logger = utils.build_logger(
             NatInstanceTest.__name__, 'abc123', [self.instance_id])
         self.logger.setLevel(logging.ERROR)
         self.instance = MagicMock()
         self.role = 'nat'
         self.instance.tags = {
             'Role': self.role, 'Name': NatInstanceTest.__name__}
+        self.instance_tags = MagicMock()
+        self.name = 'name'
+        self.instance_tags.get_name = MagicMock(return_value=self.name)
         self.instances = [self.instance]
         self.ec2_conn.get_only_instances = MagicMock(
             return_value=self.instances)
@@ -51,7 +53,7 @@ class NatInstanceTest(unittest.TestCase):
         }
 
         self.nat_instance = nat_monitor.NatInstance(
-            self.vpc_conn, self.ec2_conn, self.instance_metadata, self.logger)
+            self.vpc_conn, self.ec2_conn, self.instance_tags, self.instance_metadata, self.logger)
 
     def test_init(self):
         self.assertEqual(self.nat_instance.vpc_conn, self.vpc_conn)
@@ -64,7 +66,7 @@ class NatInstanceTest(unittest.TestCase):
         self.assertEqual(
             self.nat_instance.take_over_route_table_id, self.route_table.id)
         self.assertEqual(self.nat_instance.logger, self.logger)
-        self.assertEqual(self.nat_instance.name_tag, NatInstanceTest.__name__)
+        self.assertEqual(self.nat_instance.name_tag, self.name)
 
     def test_disable_source_dest_check(self):
         self.nat_instance.disable_source_dest_check()
@@ -96,7 +98,7 @@ class NatMonitorTest(unittest.TestCase):
         self.instance.take_over_route = MagicMock()
         self.instance_id = 'i-abc123'
         self.other_instance_id = 'i-123abc'
-        self.logger = common.build_logger(
+        self.logger = utils.build_logger(
             NatMonitorTest.__name__, 'abc123', [self.instance_id])
         self.logger.setLevel(logging.ERROR)
         self.allow_take_over_monitor = nat_monitor.NatMonitor(

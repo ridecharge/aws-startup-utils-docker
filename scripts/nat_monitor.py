@@ -4,13 +4,11 @@ import boto.vpc
 import boto.ec2
 import boto.ec2.elb
 import boto.utils
-import common
-import os
+import utils
 import time
 
 
 class NatMonitor(object):
-
     def __init__(self, elb_conn, nat_instance, logger):
         self.elb_conn = elb_conn
         self.nat_instance = nat_instance
@@ -79,7 +77,7 @@ class NatInstance(object):
         'us-west-1b': 'us-west-1a'
     }
 
-    def __init__(self, vpc_conn, ec2_conn, instance_metadata, logger):
+    def __init__(self, vpc_conn, ec2_conn, instance_tags, instance_metadata, logger):
         self.vpc_conn = vpc_conn
         self.ec2_conn = ec2_conn
 
@@ -89,7 +87,7 @@ class NatInstance(object):
         self.instance_id = instance_metadata['instance-id']
         self.my_route_table_id = self.__find_my_route_table_id()
         self.take_over_route_table_id = self.__find_takeover_route_table_id()
-        self.name_tag = common.InstanceTags(ec2_conn, self.instance_id).get_name()
+        self.name_tag = instance_tags.get_name()
 
         self.logger = logger
         self.logger.info(
@@ -108,7 +106,8 @@ class NatInstance(object):
         """ Finds a route table id for a given vpc and az with the tag network:private  """
         subnet_id = self.vpc_conn.get_all_subnets(
             filters={'vpcId': vpc_id, 'availabilityZone': az, 'tag:network': 'private'})[0].id
-        return self.vpc_conn.get_all_route_tables(filters={'association.subnet-id': subnet_id})[0].id
+        return self.vpc_conn.get_all_route_tables(filters={'association.subnet-id': subnet_id})[
+            0].id
 
     def set_route(self):
         """ Creates or replaces the route for our NAT instance """
@@ -174,13 +173,15 @@ def main():
     instance_metadata = boto.utils.get_instance_metadata()
 
     vpc_conn, ec2_conn, elb_conn = create_aws_connections(region)
-    
-    logger = common.build_logger(
-        NatMonitor.__name__, os.environ['LOGGLY_TOKEN'], [instance_metadata['instance-id'], 'nat'])
+    instance_tags = utils.InstanceTags(ec2_conn, instance_metadata['instance-id'])
+    logger = utils.get_logger(
+        NatMonitor.__name__, [instance_metadata['instance-id'], 'nat'])
+
     try:
         nat_instance = configure_nat_instance(
-            vpc_conn, ec2_conn, instance_metadata, logger)
+            vpc_conn, ec2_conn, instance_tags, instance_metadata, logger)
         nat_monitor = configure_nat_monitor(elb_conn, nat_instance, logger)
+
         while True:
             nat_monitor.monitor()
             time.sleep(10)

@@ -2,28 +2,29 @@
 import boto.utils
 import boto.ec2
 import boto.route53
-import sys
-import os
-import common
+import utils
 
 
 class DnsRegistration(object):
+    def __init__(self, route53_conn, instance_tags, instance_metadata, logger):
+        role = instance_tags.get_role()
+        hosted_zone_name = instance_tags.get_public_internal_domain()
+        hosted_zone_id = instance_tags.get_public_internal_hosted_zone()
+        az = instance_metadata['placement']['availability-zone']
 
-    def __init__(self, record_sets, role, az, hosted_zone_name, ip, logger):
-        self.record_sets = record_sets
-        self.role = role
+        self.records = route53_conn.get_all_rrsets(hosted_zone_id, 'A')
         self.record = "-".join([role, az, hosted_zone_name]).lower()
+        self.ip = instance_metadata['local-ipv4']
         self.logger = logger
-        self.ip = ip
+
         self.logger.info(
-            "DnsRegistration init with {0.record_sets.hosted_zone_id} {0.ip}.".format(self))
-        self.logger.info("Built dns record {0}".format(self.record))
+            "DnsRegistration init with {0.ip} {0.record}.".format(self))
 
     def register(self):
         """ Upserts the A record """
-        change = self.record_sets.add_change('UPSERT', self.record, 'A')
+        change = self.records.add_change('UPSERT', self.record, 'A')
         change.add_value(self.ip)
-        self.record_sets.commit()
+        self.records.commit()
         self.logger.info("Successful set {0.ip} to {0.record}.".format(self))
 
 
@@ -34,28 +35,22 @@ def create_aws_connections(region):
 
 
 def main():
-    instance_metadata = boto.utils.get_instance_metadata()
-    az = instance_metadata['placement']['availability-zone']
     region = boto.utils.get_instance_identity()['document']['region']
-    instance_id = instance_metadata['instance-id']
-
     ec2_conn, route53_conn = create_aws_connections(region)
 
-    instance_tags = common.InstanceTags(ec2_conn, instance_id)
-    role = instance_tags.get_role()
-    hosted_zone_id = instance_tags.get_public_internal_hosted_zone()
-    hosted_zone_name = instance_tags.get_public_internal_domain()
+    instance_metadata = boto.utils.get_instance_metadata()
+    instance_tags = utils.InstanceTags(ec2_conn, instance_metadata['instance-id'])
 
-    record_sets = boto.route53.record.ResourceRecordSets(
-        route53_conn, hosted_zone_id)
+    logger = utils.get_logger(
+        DnsRegistration.__name__,
+        [instance_metadata['instance-id'], instance_tags.get_role()]
+    )
 
-    logger = common.build_logger(
-        DnsRegistration.__name__, os.environ['LOGGLY_TOKEN'], [instance_id, role])
-    
     try:
         DnsRegistration(
-            record_sets, role, az, hosted_zone_name,
-            instance_metadata['local-ipv4'],
+            route53_conn,
+            instance_tags,
+            instance_metadata,
             logger
         ).register()
     except:
