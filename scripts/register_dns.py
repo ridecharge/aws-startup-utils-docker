@@ -12,7 +12,7 @@ class DnsRegistration(object):
         hosted_zone_id = instance_tags.get_public_internal_hosted_zone()
         az = instance_metadata['placement']['availability-zone']
 
-        self.records = route53_conn.get_all_rrsets(hosted_zone_id, 'A')
+        self.records = route53_conn.get_all_rrsets(hosted_zone_id)
         self.record = "-".join([role, az, hosted_zone_name]).lower()
         self.ip = instance_metadata['local-ipv4']
         self.logger = logger

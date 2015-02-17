@@ -2,7 +2,6 @@
 import unittest
 from unittest.mock import MagicMock
 import logging
-import boto
 import register_dns
 import utils
 
@@ -38,7 +37,7 @@ class DnsRegistrationTest(unittest.TestCase):
                                                          self.logger)
 
     def test_dns_registration_init(self):
-        self.conn.get_all_rrsets.assert_called_once_with(self.hosted_zone, 'A')
+        self.conn.get_all_rrsets.assert_called_once_with(self.hosted_zone)
         self.assertEqual(self.record, self.registration.record)
         self.assertEqual(self.ip, self.registration.ip)
         self.assertEqual(self.logger, self.registration.logger)
