@@ -40,7 +40,9 @@ def main():
 
     logger = utils.get_logger(
         NetworkInterfaceAttachment.__name__,
-        [instance_metadata['instance-id'], instance_tags.get_role()]
+        [instance_metadata['instance-id'],
+         instance_tags.get_role(),
+         instance_tags.get_environment()]
     )
 
     try:

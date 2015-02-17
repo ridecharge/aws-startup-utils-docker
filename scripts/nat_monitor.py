@@ -175,7 +175,10 @@ def main():
     vpc_conn, ec2_conn, elb_conn = create_aws_connections(region)
     instance_tags = utils.InstanceTags(ec2_conn, instance_metadata['instance-id'])
     logger = utils.get_logger(
-        NatMonitor.__name__, [instance_metadata['instance-id'], 'nat'])
+        NatMonitor.__name__,
+        [instance_metadata['instance-id'],
+         instance_tags.get_role(),
+         instance_tags.get_environment()])
 
     try:
         nat_instance = configure_nat_instance(
