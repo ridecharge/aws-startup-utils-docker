@@ -6,7 +6,6 @@ import utils
 
 
 class NetworkInterfaceAttachment(object):
-    # def __init__(self, conn, logger, role, subnet_id, instance_id, device_index=1):
     def __init__(self, ec2_conn, instance_tags, instance_metadata, logger, device_index=1):
         self.ec2_conn = ec2_conn
         self.role = instance_tags.get_role()
@@ -22,7 +21,9 @@ class NetworkInterfaceAttachment(object):
 
     def __find_network_interface(self):
         return self.ec2_conn.get_all_network_interfaces(
-            filters={'tag:Role': self.role, 'subnet-id': self.subnet_id}
+            filters={'tag:Role': self.role,
+                     'subnet-id': self.subnet_id,
+                     'attachment.status': 'detached'}
         )[0]
 
     def attach(self):
