@@ -57,7 +57,7 @@ class NetworkInterfaceAttachmentTest(unittest.TestCase):
     def test_attach(self):
         self.network_attachment.attach()
         self.conn.get_all_network_interfaces.assert_called_with(
-            filters={'tag:Role': self.role, 'subnet-id': self.subnet_id})
+            filters={'attachment.status': 'detached','tag:Role': self.role, 'subnet-id': self.subnet_id})
         self.network_interface.attach.assert_called_with(
             self.instance_id, self.device_index)
 

@@ -16,7 +16,7 @@ class DnsRegistrationTest(unittest.TestCase):
         self.role = 'dns'
         self.az = 'us-east-1a'
         self.hosted_zone_name = 'test.gc'
-        self.record = "-".join([self.role, self.az, self.hosted_zone_name])
+        self.record = (self.role+'-'+self.az+'.'+self.hosted_zone_name).lower()
 
         self.logger = utils.build_logger(
             self.logger_name, 'abc123', [self.instance_id, self.role])
