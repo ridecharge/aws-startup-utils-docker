@@ -22,6 +22,6 @@ RUN ansible-playbook --connection=local /tmp/playbook.yml
 RUN apt-get purge -y --auto-remove ansible software-properties-common
 
 # Install our aws-startup-utils
-COPY scripts /usr/local/aws-startup-utils/bin
-RUN chmod -R 0500 /usr/local/aws-startup-utils/bin
-WORKDIR /usr/local/aws-startup-utils/bin
+COPY scripts /opt/aws-startup-utils
+RUN chmod -R 0500 /opt/aws-startup-utils
+WORKDIR /opt/aws-startup-utils
