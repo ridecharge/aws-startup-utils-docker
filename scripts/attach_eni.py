@@ -23,7 +23,7 @@ class NetworkInterfaceAttachment(object):
         return self.ec2_conn.get_all_network_interfaces(
             filters={'tag:Role': self.role,
                      'subnet-id': self.subnet_id,
-                     'attachment.status': 'available'}
+                     'status': 'available'}
         )[0]
 
     def attach(self):
