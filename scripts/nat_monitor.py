@@ -71,8 +71,8 @@ class NatMonitor(object):
 
 class NatInstance(object):
     TAKE_OVER_AZ = {
-        'us-east-1a': 'us-east-1c',
-        'us-east-1c': 'us-east-1a',
+        'us-east-1e': 'us-east-1c',
+        'us-east-1c': 'us-east-1e',
         'us-west-1a': 'us-west-1b',
         'us-west-1b': 'us-west-1a'
     }
