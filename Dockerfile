@@ -1,5 +1,5 @@
 # Latest Ansible Container
-FROM ridecharge/ansible
+FROM registry.gocurb.internal:80/ansible
 
 COPY scripts /opt/aws-startup-utils
 RUN chmod -R 0500 /opt/aws-startup-utils
