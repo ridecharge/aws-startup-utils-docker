@@ -1,4 +1,5 @@
-CONTAINER=ridecharge/aws-startup-utils
+DOCKER_REPO?=registry.gocurb.internal:80
+CONTAINER=$(DOCKER_REPO)/aws-startup-utils
 
 all: build push clean
 
