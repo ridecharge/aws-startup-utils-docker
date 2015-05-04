@@ -61,8 +61,8 @@ class NatInstance(object):
                 raise err
 
 
-def configure_nat_instance(vpc_conn, ec2_conn, instance_tags, instance_metadata, logger):
-    nat_instance = NatInstance(vpc_conn, ec2_conn, instance_tags, instance_metadata, logger)
+def configure_nat_instance(vpc_conn, ec2_conn, instance_tags, instance_metadata):
+    nat_instance = NatInstance(vpc_conn, ec2_conn, instance_tags, instance_metadata)
     nat_instance.disable_source_dest_check()
     nat_instance.set_route()
     return nat_instance
