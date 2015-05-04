@@ -14,10 +14,6 @@ class NetworkInterfaceAttachmentTest(unittest.TestCase):
         self.role = 'ntp'
         self.device_index = 2
         self.conn = MagicMock()
-        self.logger = utils.build_logger(
-            self.logger_name, '123', [self.instance_id, self.role])
-        self.logger.setLevel(logging.ERROR)
-
         self.instance_metadata = {
             'instance-id': self.instance_id,
             'network': {
@@ -38,7 +34,6 @@ class NetworkInterfaceAttachmentTest(unittest.TestCase):
         self.network_attachment = attach_eni.NetworkInterfaceAttachment(self.conn,
                                                                         self.instance_tags,
                                                                         self.instance_metadata,
-                                                                        self.logger,
                                                                         self.device_index)
         self.network_interface = MagicMock()
         self.network_interface.attach = MagicMock()
@@ -47,7 +42,6 @@ class NetworkInterfaceAttachmentTest(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.network_attachment.ec2_conn, self.conn)
-        self.assertEqual(self.network_attachment.logger, self.logger)
         self.assertEqual(self.network_attachment.role, self.role)
         self.assertEqual(self.network_attachment.subnet_id, self.subnet_id)
         self.assertEqual(self.network_attachment.instance_id, self.instance_id)
@@ -57,7 +51,8 @@ class NetworkInterfaceAttachmentTest(unittest.TestCase):
     def test_attach(self):
         self.network_attachment.attach()
         self.conn.get_all_network_interfaces.assert_called_with(
-            filters={'attachment.status': 'detached','tag:Role': self.role, 'subnet-id': self.subnet_id})
+            filters={'status': 'available', 'tag:Role': self.role,
+                     'subnet-id': self.subnet_id})
         self.network_interface.attach.assert_called_with(
             self.instance_id, self.device_index)
 
